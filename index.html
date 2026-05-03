@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Tracker v4</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0c0c0f; --surface:#141418; --surface2:#1c1c22; --surface3:#242430;
+  --border:#2a2a36; --accent:#f0a500; --accent-dim:rgba(240,165,0,0.12);
+  --accent2:#5b8cff; --accent2-dim:rgba(91,140,255,0.12);
+  --green:#3ecf8e; --green-dim:rgba(62,207,142,0.12);
+  --red:#ff5c5c; --red-dim:rgba(255,92,92,0.10);
+  --purple:#c864ff; --purple-dim:rgba(200,100,255,0.12);
+  --text:#e8e8f0; --text2:#9090a8; --text3:#55556a;
+  --font-d:'Syne',sans-serif; --font-b:'DM Sans',sans-serif; --font-m:'DM Mono',monospace;
+  --r:16px; --nav-h:68px;
+}
+[data-theme="light"]{--bg:#f4f4f8;--surface:#fff;--surface2:#eeeef5;--surface3:#e4e4ee;--border:#d8d8e8;--text:#1a1a2e;--text2:#60607a;--text3:#a0a0b8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#080810;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--font-b);color:var(--text);padding:20px;gap:28px;flex-wrap:wrap;}
+[data-theme="light"] body{background:#d0d0de;}
+
+/* PHONE */
+.phone{width:360px;border-radius:44px;background:var(--bg);border:1.5px solid #252535;box-shadow:0 0 0 6px #0a0a0d,0 40px 80px rgba(0,0,0,0.8);overflow:hidden;position:relative;flex-shrink:0;transition:background 0.3s;}
+[data-theme="light"] .phone{border-color:#c0c0d0;box-shadow:0 0 0 6px #ccccd8,0 40px 80px rgba(0,0,0,0.18);}
+.notch{width:100%;height:34px;background:var(--bg);display:flex;align-items:center;justify-content:center;position:relative;}
+.notch::after{content:'';width:100px;height:24px;background:var(--bg);border-radius:0 0 16px 16px;position:absolute;top:0;border:1.5px solid var(--border);border-top:none;}
+.status{position:absolute;width:100%;top:0;left:0;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:11px;font-family:var(--font-m);color:var(--text2);z-index:10;}
+.screen{height:726px;overflow:hidden;background:var(--bg);position:relative;}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.view.active{opacity:1;pointer-events:all;}
+.vcontent{flex:1;overflow-y:auto;padding-bottom:76px;scrollbar-width:none;}
+.vcontent::-webkit-scrollbar{display:none;}
+.vcontent.no-nav{padding-bottom:0;}
+
+/* NAV */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 4px 6px;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;cursor:pointer;border-radius:12px;transition:all 0.15s;}
+.nav-item:hover{background:var(--surface2);}
+.nav-icon{font-size:18px;transition:all 0.15s;}
+.nav-label{font-size:9px;color:var(--text3);font-family:var(--font-m);transition:all 0.15s;letter-spacing:0.5px;}
+.nav-item.active .nav-label{color:var(--accent);}
+.nav-item.active .nav-icon{transform:scale(1.12);}
+
+/* SHARED */
+.navbar{padding:10px 18px 4px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.nb-title{font-family:var(--font-d);font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--text);}
+.nb-sub{font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:1px;}
+.icon-btn{width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.icon-btn:hover{background:var(--surface3);}
+.section-lbl{font-size:10px;font-family:var(--font-m);color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px;}
+.divider{height:1px;background:var(--border);margin:2px 18px 12px;flex-shrink:0;}
+.px{padding:0 18px;}
+
+/* ===================== ONBOARDING ===================== */
+#view-onboarding .vcontent{display:flex;flex-direction:column;justify-content:center;min-height:100%;padding:32px 24px 32px;}
+.onb-step{display:none;flex-direction:column;gap:20px;}
+.onb-step.active{display:flex;}
+.onb-emoji{font-size:48px;text-align:center;margin-bottom:4px;}
+.onb-title{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--text);text-align:center;line-height:1.2;}
+.onb-sub{font-size:13px;color:var(--text2);text-align:center;line-height:1.5;}
+.onb-field{display:flex;flex-direction:column;gap:6px;}
+.onb-label{font-size:11px;font-family:var(--font-m);color:var(--text3);letter-spacing:0.8px;}
+.onb-input{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px 14px;font-family:var(--font-b);font-size:14px;color:var(--text);outline:none;transition:border 0.15s;}
+.onb-input:focus{border-color:rgba(240,165,0,0.5);}
+.onb-btn{height:50px;border-radius:14px;background:var(--accent);border:none;font-family:var(--font-d);font-size:14px;font-weight:700;color:#000;cursor:pointer;transition:opacity 0.15s;margin-top:4px;}
+.onb-btn:hover{opacity:0.9;}
+.onb-btn.secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.onb-dots{display:flex;gap:6px;justify-content:center;}
+.onb-dot{width:6px;height:6px;border-radius:50%;background:var(--surface3);transition:all 0.2s;}
+.onb-dot.active{background:var(--accent);width:18px;border-radius:3px;}
+
+/* ===================== HOME ===================== */
+.home-header{padding:10px 18px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.home-greeting{display:flex;flex-direction:column;}
+.home-name{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text);line-height:1.1;}
+.home-date{font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:2px;}
+
+/* Stats strip */
+.stats-strip{display:flex;gap:7px;padding:4px 18px 12px;flex-shrink:0;}
+.stat-chip{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:9px 8px;text-align:center;cursor:default;}
+.sc-val{font-family:var(--font-m);font-size:13px;font-weight:500;color:var(--text);}
+.sc-lbl{font-size:9px;color:var(--text3);margin-top:2px;font-family:var(--font-m);}
+
+/* ---- AGENDA HOJE (main feature) ---- */
+.agenda-card{margin:0 18px 7px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all 0.2s;}
+.agenda-card.active-now{border-color:rgba(240,165,0,0.4);background:rgba(240,165,0,0.03);}
+.agenda-card.paused-state{border-color:rgba(91,140,255,0.35);background:rgba(91,140,255,0.03);}
+.agenda-card.done-state{opacity:0.55;}
+.ag-main{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:default;}
+.ag-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ag-info{flex:1;min-width:0;}
+.ag-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ag-sub{font-size:10px;color:var(--text2);font-family:var(--font-m);margin-top:1px;}
+.ag-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.ag-time{font-family:var(--font-m);font-size:11px;color:var(--text3);}
+/* inline timer */
+.ag-live{font-family:var(--font-m);font-size:14px;font-weight:500;color:var(--accent);}
+.ag-paused-lbl{font-family:var(--font-m);font-size:10px;color:var(--accent2);background:var(--accent2-dim);border-radius:20px;padding:2px 8px;border:1px solid rgba(91,140,255,0.25);}
+/* action buttons */
+.ag-controls{display:flex;gap:6px;padding:0 13px 11px;}
+.ag-btn{flex:1;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:var(--font-m);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all 0.15s;letter-spacing:0.3px;}
+.ag-btn:hover{background:var(--surface3);}
+.ag-btn.play{background:var(--accent-dim);border-color:rgba(240,165,0,0.4);color:var(--accent);}
+.ag-btn.play:hover{background:rgba(240,165,0,0.2);}
+.ag-btn.pause{background:var(--accent2-dim);border-color:rgba(91,140,255,0.35);color:var(--accent2);}
+.ag-btn.stop{background:var(--green-dim);border-color:rgba(62,207,142,0.35);color:var(--green);}
+.ag-btn.reschedule{background:var(--surface2);color:var(--text3);}
+.ag-btn.danger{background:var(--red-dim);border-color:rgba(255,92,92,0.3);color:var(--red);}
+.ag-status-done{display:flex;align-items:center;gap:6px;padding:0 13px 11px;}
+.ag-done-check{width:20px;height:20px;border-radius:50%;background:var(--green-dim);border:1px solid rgba(62,207,142,0.3);display:flex;align-items:center;justify-content:center;}
+.ag-done-txt{font-size:11px;color:var(--green);font-family:var(--font-m);}
+.ag-done-dur{font-size:11px;color:var(--text3);font-family:var(--font-m);margin-left:auto;}
+
+/* ---- TOPICS (home) — no inline controls, just data + click ---- */
+.topic-row{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin:0 18px 7px;cursor:pointer;transition:all 0.18s;}
+.topic-row:hover{background:var(--surface2);border-color:rgba(255,255,255,0.08);}
+.topic-row-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.topic-row-info{flex:1;min-width:0;}
+.topic-row-name{font-size:13px;font-weight:600;color:var(--text);}
+.topic-row-meta{font-size:10px;color:var(--text2);font-family:var(--font-m);margin-top:1px;}
+.topic-row-right{text-align:right;flex-shrink:0;}
+.topic-row-time{font-family:var(--font-m);font-size:13px;color:var(--text);}
+.topic-row-since{font-size:9px;color:var(--text3);font-family:var(--font-m);margin-top:2px;}
+.topic-row-arrow{color:var(--text3);margin-left:6px;}
+
+/* add topic button */
+.add-topic-btn{display:flex;align-items:center;gap:8px;padding:10px 13px;background:transparent;border:1.5px dashed var(--border);border-radius:var(--r);margin:0 18px 7px;cursor:pointer;transition:all 0.15s;opacity:0.5;}
+.add-topic-btn:hover{opacity:0.8;border-color:var(--text3);}
+.add-topic-btn span{font-size:12px;color:var(--text3);}
+
+/* ===================== STATS ===================== */
+.stats-header{padding:10px 18px 4px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.stats-back{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.stats-title-wrap{flex:1;}
+.stats-main-title{font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--text);}
+.stats-sub{font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:1px;}
+
+.filter-row{display:flex;gap:6px;padding:0 18px 12px;flex-shrink:0;}
+.fchip{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font-m);transition:all 0.15s;}
+.fchip.active{background:var(--accent-dim);border-color:rgba(240,165,0,0.4);color:var(--accent);}
+
+.chart-card{margin:0 18px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;flex-shrink:0;}
+.chart-title{font-size:10px;color:var(--text3);font-family:var(--font-m);letter-spacing:1px;text-transform:uppercase;margin-bottom:11px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.bar-row:last-child{margin-bottom:0;}
+.bl{font-size:11px;color:var(--text2);width:76px;flex-shrink:0;font-family:var(--font-m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bt{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.bv{font-size:10px;color:var(--text3);font-family:var(--font-m);width:38px;text-align:right;flex-shrink:0;}
+.completion-card{margin:0 18px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.rate-ring{position:relative;flex-shrink:0;}
+.rate-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.rate-pct{font-family:var(--font-m);font-size:17px;font-weight:500;color:var(--text);}
+.rate-lbl{font-size:8px;color:var(--text3);font-family:var(--font-m);}
+.rate-breakdown{flex:1;display:flex;flex-direction:column;gap:6px;}
+.rb-item{display:flex;align-items:center;gap:8px;}
+.rb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.rb-lbl{font-size:11px;color:var(--text2);flex:1;}
+.rb-val{font-family:var(--font-m);font-size:11px;color:var(--text3);}
+.heatmap{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;}
+.heat-cell{aspect-ratio:1;border-radius:2px;}
+.hour-labels{display:flex;justify-content:space-between;margin-top:4px;}
+.hour-labels span{font-size:8px;color:var(--text3);font-family:var(--font-m);}
+
+/* Topic stats list (in stats) */
+.topic-stat-chip{display:flex;align-items:center;gap:10px;margin:0 18px 7px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;cursor:pointer;transition:all 0.15s;}
+.topic-stat-chip:hover{background:var(--surface2);}
+.tsc-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.tsc-info{flex:1;}
+.tsc-name{font-size:13px;font-weight:600;color:var(--text);}
+.tsc-sub{font-size:10px;color:var(--text2);font-family:var(--font-m);margin-top:1px;}
+.tsc-time{font-family:var(--font-m);font-size:13px;color:var(--text);}
+
+/* ===================== TASKS ===================== */
+.task-type-tabs{display:flex;gap:0;margin:6px 18px 12px;background:var(--surface2);border-radius:10px;padding:3px;flex-shrink:0;}
+.tt-tab{flex:1;padding:6px;border-radius:7px;text-align:center;font-size:11px;font-family:var(--font-m);color:var(--text3);cursor:pointer;transition:all 0.18s;}
+.tt-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.task-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.task-item:last-child{border-bottom:none;}
+.t-check{width:19px;height:19px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;cursor:pointer;}
+.t-check.checked{background:var(--green);border-color:var(--green);}
+.t-info{flex:1;min-width:0;}
+.t-name{font-size:13px;color:var(--text);}
+.t-name.done{text-decoration:line-through;color:var(--text3);}
+.t-meta{font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:2px;}
+.t-badge{font-size:9px;font-family:var(--font-m);padding:2px 7px;border-radius:20px;border:1px solid var(--border);color:var(--text3);flex-shrink:0;}
+.t-badge.improvised{background:rgba(240,165,0,0.1);color:var(--accent);border-color:rgba(240,165,0,0.25);}
+.t-badge.scheduled{background:var(--accent2-dim);color:var(--accent2);border-color:rgba(91,140,255,0.25);}
+.t-badge.permanent{background:var(--green-dim);color:var(--green);border-color:rgba(62,207,142,0.25);}
+.t-badge.weekly{background:var(--purple-dim);color:var(--purple);border-color:rgba(200,100,255,0.25);}
+.t-badge.indefinite{background:rgba(144,144,168,0.1);color:var(--text2);border-color:rgba(144,144,168,0.2);}
+.task-section{padding:0 18px 4px;flex-shrink:0;}
+.month-header{display:flex;align-items:center;gap:10px;padding:0 18px 7px;flex-shrink:0;}
+.month-lbl{font-size:11px;font-family:var(--font-m);color:var(--text3);letter-spacing:1px;}
+.month-line{flex:1;height:1px;background:var(--border);}
+.day-header{font-size:10px;font-family:var(--font-m);color:var(--accent);padding:5px 18px 3px;flex-shrink:0;}
+.perm-type-header{display:flex;align-items:center;gap:8px;padding:8px 18px 5px;flex-shrink:0;}
+.pth-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.pth-lbl{font-size:10px;font-family:var(--font-m);color:var(--text3);letter-spacing:1px;text-transform:uppercase;flex:1;}
+/* FAB add task */
+.fab{position:absolute;bottom:80px;right:18px;width:48px;height:48px;border-radius:14px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(240,165,0,0.35);z-index:50;transition:all 0.15s;}
+.fab:hover{transform:scale(1.05);}
+
+/* ===================== SETTINGS ===================== */
+.setting-row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.setting-row:hover{background:var(--surface2);}
+.setting-row:last-child{border-bottom:none;}
+.sr-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sr-info{flex:1;}
+.sr-name{font-size:13px;font-weight:500;color:var(--text);}
+.sr-sub{font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:1px;}
+.toggle{width:42px;height:23px;background:var(--surface3);border-radius:12px;border:1px solid var(--border);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(--accent);border-color:var(--accent);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;background:#fff;border-radius:50%;transition:left 0.18s;}
+.toggle.on::after{left:22px;}
+.settings-card{margin:6px 18px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.global-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin:6px 18px 0;flex-shrink:0;}
+.gs-row{display:flex;gap:12px;}
+.gs-item{text-align:center;flex:1;}
+.gs-val{font-family:var(--font-m);font-size:16px;font-weight:500;color:var(--text);}
+.gs-lbl{font-size:9px;color:var(--text3);font-family:var(--font-m);margin-top:2px;}
+
+/* ===================== MODALS ===================== */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity 0.22s;backdrop-filter:blur(3px);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-sheet{width:100%;background:var(--surface);border-radius:22px 22px 0 0;border:1px solid var(--border);border-bottom:none;transform:translateY(100%);transition:transform 0.28s cubic-bezier(0.34,1.4,0.64,1);}
+.modal-overlay.open .modal-sheet{transform:translateY(0);}
+.modal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 14px;}
+.modal-title{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);padding:0 18px 3px;}
+.modal-sub{font-size:11px;color:var(--text3);font-family:var(--font-m);padding:0 18px 14px;}
+.modal-body{padding:0 18px 28px;display:flex;flex-direction:column;gap:12px;}
+.modal-field{display:flex;flex-direction:column;gap:5px;}
+.modal-label{font-size:10px;font-family:var(--font-m);color:var(--text3);letter-spacing:0.8px;}
+.modal-input{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-family:var(--font-b);font-size:13px;color:var(--text);outline:none;transition:border 0.15s;width:100%;}
+.modal-input:focus{border-color:rgba(240,165,0,0.45);}
+.modal-actions{display:flex;gap:8px;padding:0 18px 28px;}
+.modal-btn{flex:1;height:44px;border-radius:12px;font-family:var(--font-d);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;border:none;}
+.modal-btn.cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.modal-btn.confirm{background:var(--accent);color:#000;}
+.modal-btn.confirm:hover{opacity:0.9;}
+
+/* emoji row */
+.emoji-row{display:flex;gap:6px;flex-wrap:wrap;}
+.emoji-opt{width:36px;height:36px;border-radius:9px;background:var(--surface2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all 0.15s;}
+.emoji-opt:hover,.emoji-opt.selected{border-color:var(--accent);background:var(--accent-dim);}
+/* color row */
+.color-row{display:flex;gap:6px;}
+.color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all 0.15s;}
+.color-opt:hover,.color-opt.selected{border-color:#fff;transform:scale(1.12);}
+
+/* topic selector in task creation */
+.topic-sel-row{display:flex;flex-direction:column;gap:5px;}
+.sel-chip{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--font-m);transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;}
+.sel-chip.selected{background:var(--accent-dim);border-color:rgba(240,165,0,0.4);color:var(--accent);}
+.sel-chip:hover{background:var(--surface3);}
+
+/* time selector */
+.time-row{display:flex;gap:8px;}
+.time-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-family:var(--font-m);font-size:14px;color:var(--text);outline:none;text-align:center;}
+.time-sep{display:flex;align-items:center;color:var(--text3);font-size:12px;}
+
+/* reschedule times list */
+.time-option{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background 0.15s;}
+.time-option:hover{background:var(--surface2);}
+.time-option:last-child{border-bottom:none;}
+.to-time{font-family:var(--font-m);font-size:14px;color:var(--text);width:80px;}
+.to-label{font-size:12px;color:var(--text2);flex:1;}
+.to-badge{font-size:9px;font-family:var(--font-m);padding:2px 7px;border-radius:20px;}
+.to-badge.free{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.3);}
+.to-badge.busy{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,92,92,0.3);}
+
+/* conflict blocked banner */
+.blocked-banner{background:rgba(255,92,92,0.07);border:1px solid rgba(255,92,92,0.2);border-radius:13px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start;margin:0 18px 14px;}
+.bb-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.bb-title{font-size:13px;font-weight:600;color:var(--red);margin-bottom:3px;}
+.bb-desc{font-size:11px;color:var(--text2);font-family:var(--font-m);line-height:1.5;}
+
+/* topic detail stats (sub-view of stats) */
+.subtopic-stat{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.subtopic-stat:last-child{border-bottom:none;}
+.ss-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ss-name{flex:1;font-size:13px;color:var(--text2);}
+.ss-bar-wrap{width:80px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.ss-bar{height:100%;border-radius:3px;}
+.ss-time{font-family:var(--font-m);font-size:11px;color:var(--text3);width:42px;text-align:right;}
+
+/* Toast */
+#toast{position:fixed;bottom:36px;left:50%;transform:translateX(-50%);background:#1c1c28;border:1px solid #3a3a50;border-radius:11px;padding:8px 16px;font-size:12px;color:#e8e8f0;font-family:'DM Sans',sans-serif;opacity:0;transition:opacity 0.18s;pointer-events:none;white-space:nowrap;z-index:9999;}
+[data-theme="light"] #toast{background:#fff;border-color:#d0d0e0;color:#1a1a2e;}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="notch"><div class="status"><span>9:41</span><span style="font-size:13px">●●● 🔋</span></div></div>
+  <div class="screen">
+
+    <!-- ========== ONBOARDING ========== -->
+    <div class="view active" id="view-onboarding">
+      <div class="vcontent no-nav">
+        <!-- Step 1: Welcome -->
+        <div class="onb-step active" id="onb-step-1" style="padding:32px 24px 32px">
+          <div class="onb-emoji">🚀</div>
+          <div class="onb-title">Bem-vindo ao Personal Tracker</div>
+          <div class="onb-sub">Vamos configurar seu perfil. Leva menos de 1 minuto — os dados ficam só no seu celular.</div>
+          <div class="onb-field">
+            <div class="onb-label">NOME</div>
+            <input class="onb-input" id="onb-name" placeholder="Como posso te chamar?" maxlength="20"/>
+          </div>
+          <div class="onb-field">
+            <div class="onb-label">DATA DE NASCIMENTO</div>
+            <input class="onb-input" id="onb-birth" type="date"/>
+          </div>
+          <button class="onb-btn" onclick="nextOnb(2)">Continuar →</button>
+          <div class="onb-dots"><div class="onb-dot active"></div><div class="onb-dot"></div><div class="onb-dot"></div></div>
+        </div>
+        <!-- Step 2: Goals -->
+        <div class="onb-step" id="onb-step-2" style="padding:32px 24px 32px">
+          <div class="onb-emoji">🎯</div>
+          <div class="onb-title">Qual é a sua meta diária?</div>
+          <div class="onb-sub">Quanto tempo por dia você quer dedicar às suas atividades?</div>
+          <div class="onb-field">
+            <div class="onb-label">META DE HORAS/DIA</div>
+            <input class="onb-input" id="onb-goal" type="number" placeholder="ex: 4" min="1" max="16"/>
+          </div>
+          <div class="onb-field">
+            <div class="onb-label">DIA DE INÍCIO DA SEMANA</div>
+            <select class="onb-input" id="onb-weekstart">
+              <option value="0">Domingo</option>
+              <option value="1" selected>Segunda-feira</option>
+            </select>
+          </div>
+          <button class="onb-btn" onclick="nextOnb(3)">Continuar →</button>
+          <button class="onb-btn secondary" onclick="nextOnb(1)" style="margin-top:-8px">← Voltar</button>
+          <div class="onb-dots"><div class="onb-dot"></div><div class="onb-dot active"></div><div class="onb-dot"></div></div>
+        </div>
+        <!-- Step 3: Ready -->
+        <div class="onb-step" id="onb-step-3" style="padding:32px 24px 32px">
+          <div class="onb-emoji">✅</div>
+          <div class="onb-title" id="onb-ready-title">Pronto, Gustavo!</div>
+          <div class="onb-sub">Tudo configurado. Você pode alterar essas informações nas configurações a qualquer momento.</div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text3);font-family:var(--font-m)">NOME</span><span id="onb-confirm-name" style="color:var(--text)">Gustavo</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text3);font-family:var(--font-m)">NASCIMENTO</span><span id="onb-confirm-birth" style="color:var(--text)">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text3);font-family:var(--font-m)">META DIÁRIA</span><span id="onb-confirm-goal" style="color:var(--accent);font-family:var(--font-m)">4h</span></div>
+          </div>
+          <button class="onb-btn" onclick="finishOnboarding()">Começar a usar →</button>
+          <div class="onb-dots"><div class="onb-dot"></div><div class="onb-dot"></div><div class="onb-dot active"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== HOME ========== -->
+    <div class="view" id="view-home">
+      <!-- Header compacto -->
+      <div class="home-header" style="flex-shrink:0">
+        <div class="home-greeting">
+          <div class="home-name" id="home-greeting-name">Olá, Gustavo 👋</div>
+          <div class="home-date" id="home-date">QUA, 25 MAR · S13 · DIA 84</div>
+        </div>
+        <div class="icon-btn" onclick="navigate('settings')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+      </div>
+
+      <!-- Stats strip: Hoje / Mês / Total (baseados em sessões concluídas) -->
+      <div class="stats-strip">
+        <div class="stat-chip">
+          <div class="sc-val">3h 12m</div>
+          <div class="sc-lbl">HOJE</div>
+        </div>
+        <div class="stat-chip">
+          <div class="sc-val">58h 10m</div>
+          <div class="sc-lbl">MÊS</div>
+        </div>
+        <div class="stat-chip">
+          <div class="sc-val">176h</div>
+          <div class="sc-lbl">TOTAL</div>
+        </div>
+      </div>
+
+      <div class="vcontent">
+        <!-- AGENDA DE HOJE — com controles inline -->
+        <div class="px" style="padding-bottom:7px"><div class="section-lbl">Agenda de hoje</div></div>
+
+        <!-- Concluída -->
+        <div class="agenda-card done-state">
+          <div class="ag-main">
+            <div class="ag-icon" style="background:rgba(62,207,142,0.12);color:#3ecf8e">🏋️</div>
+            <div class="ag-info">
+              <div class="ag-name">Academia › Perna</div>
+              <div class="ag-sub">06:00 – 07:00</div>
+            </div>
+            <div class="ag-right">
+              <div class="ag-time" style="color:var(--green)">✓</div>
+            </div>
+          </div>
+          <div class="ag-status-done">
+            <div class="ag-done-check"><svg width="9" height="9" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+            <div class="ag-done-txt">Concluída</div>
+            <div class="ag-done-dur">1h 10m realizadas</div>
+          </div>
+        </div>
+
+        <!-- Ativa (em execução) -->
+        <div class="agenda-card active-now" id="ag-active">
+          <div class="ag-main">
+            <div class="ag-icon" style="background:rgba(240,165,0,0.12);color:#f0a500">⚡</div>
+            <div class="ag-info">
+              <div class="ag-name">Programação › React Native</div>
+              <div class="ag-sub">Improviso · iniciado 09:14</div>
+            </div>
+            <div class="ag-right">
+              <div class="ag-live" id="ag-live-timer">00:47:22</div>
+            </div>
+          </div>
+          <div class="ag-controls">
+            <div class="ag-btn pause" onclick="pauseAgenda()">⏸ Pausar</div>
+            <div class="ag-btn stop" onclick="finishAgenda()">✓ Finalizar</div>
+          </div>
+        </div>
+
+        <!-- Pausada -->
+        <div class="agenda-card paused-state" id="ag-paused" style="display:none">
+          <div class="ag-main">
+            <div class="ag-icon" style="background:rgba(240,165,0,0.12);color:#f0a500">⚡</div>
+            <div class="ag-info">
+              <div class="ag-name">Programação › React Native</div>
+              <div class="ag-sub">Improviso · pausado às 10:02</div>
+            </div>
+            <div class="ag-right"><div class="ag-paused-lbl">Pausado</div></div>
+          </div>
+          <div class="ag-controls">
+            <div class="ag-btn play" onclick="resumeAgenda()">▶ Retomar</div>
+            <div class="ag-btn danger" onclick="cancelAgenda()">✕ Cancelar</div>
+          </div>
+        </div>
+
+        <!-- Agendada futura — pode antecipar -->
+        <div class="agenda-card" id="ag-math">
+          <div class="ag-main">
+            <div class="ag-icon" style="background:rgba(91,140,255,0.12);color:#5b8cff">📚</div>
+            <div class="ag-info">
+              <div class="ag-name">Estudos › Matemática</div>
+              <div class="ag-sub">14:00 – 16:00 · em 4h 14m</div>
+            </div>
+            <div class="ag-right">
+              <div class="ag-time">2h</div>
+            </div>
+          </div>
+          <div class="ag-controls">
+            <div class="ag-btn play" onclick="showToast('▶ Matemática iniciada antecipadamente!')">▶ Antecipar</div>
+            <div class="ag-btn reschedule" onclick="openReschedule('Matemática', '14:00')">↕ Reagendar</div>
+          </div>
+        </div>
+
+        <!-- Agendada futura — noite -->
+        <div class="agenda-card">
+          <div class="ag-main">
+            <div class="ag-icon" style="background:rgba(240,165,0,0.12);color:#f0a500">⚡</div>
+            <div class="ag-info">
+              <div class="ag-name">Programação › Kotlin</div>
+              <div class="ag-sub">20:00 – 21:30 · em 10h</div>
+            </div>
+            <div class="ag-right"><div class="ag-time">1h 30m</div></div>
+          </div>
+          <div class="ag-controls">
+            <div class="ag-btn play" onclick="showToast('▶ Kotlin iniciado antecipadamente!')">▶ Antecipar</div>
+            <div class="ag-btn reschedule" onclick="openReschedule('Kotlin', '20:00')">↕ Reagendar</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- TÓPICOS MESTRES — só exibição + click → stats -->
+        <div class="px" style="padding-bottom:7px;display:flex;align-items:center;justify-content:space-between">
+          <div class="section-lbl" style="margin-bottom:0">Tópicos Mestres</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--font-m);cursor:pointer" onclick="navigate('stats')">ver stats →</div>
+        </div>
+
+        <div class="topic-row" onclick="openTopicStats('Programação','⚡','#f0a500')">
+          <div class="topic-row-icon" style="background:rgba(240,165,0,0.12);color:#f0a500">⚡</div>
+          <div class="topic-row-info">
+            <div class="topic-row-name">Programação</div>
+            <div class="topic-row-meta">4 subtópicos · desde 12 Jan</div>
+          </div>
+          <div class="topic-row-right">
+            <div class="topic-row-time">82h 30m</div>
+            <div class="topic-row-since">acumulado</div>
+          </div>
+          <div class="topic-row-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+        </div>
+
+        <div class="topic-row" onclick="openTopicStats('Estudos','📚','#5b8cff')">
+          <div class="topic-row-icon" style="background:rgba(91,140,255,0.12);color:#5b8cff">📚</div>
+          <div class="topic-row-info">
+            <div class="topic-row-name">Estudos</div>
+            <div class="topic-row-meta">3 subtópicos · desde 10 Jan</div>
+          </div>
+          <div class="topic-row-right">
+            <div class="topic-row-time">55h 20m</div>
+            <div class="topic-row-since">acumulado</div>
+          </div>
+          <div class="topic-row-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+        </div>
+
+        <div class="topic-row" onclick="openTopicStats('Academia','🏋️','#3ecf8e')">
+          <div class="topic-row-icon" style="background:rgba(62,207,142,0.12);color:#3ecf8e">🏋️</div>
+          <div class="topic-row-info">
+            <div class="topic-row-name">Academia</div>
+            <div class="topic-row-meta">5 subtópicos · desde 10 Jan</div>
+          </div>
+          <div class="topic-row-right">
+            <div class="topic-row-time">38h 00m</div>
+            <div class="topic-row-since">acumulado</div>
+          </div>
+          <div class="topic-row-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg></div>
+        </div>
+
+        <div class="add-topic-btn" onclick="openTopicEdit()">
+          <div style="width:34px;height:34px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px">＋</div>
+          <span>Novo Tópico Mestre</span>
+        </div>
+
+        <div style="height:8px"></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="navigate('home')"><div class="nav-icon">⊞</div><div class="nav-label">INÍCIO</div></div>
+        <div class="nav-item" onclick="navigate('stats')"><div class="nav-icon">📊</div><div class="nav-label">STATS</div></div>
+        <div class="nav-item" onclick="navigate('tasks')"><div class="nav-icon">☑</div><div class="nav-label">TAREFAS</div></div>
+        <div class="nav-item" onclick="navigate('settings')"><div class="nav-icon">⚙</div><div class="nav-label">CONFIG</div></div>
+      </div>
+    </div>
+
+    <!-- ========== STATS (global + topic drill-down) ========== -->
+    <div class="view" id="view-stats">
+      <!-- Header dinâmico -->
+      <div class="stats-header">
+        <div class="stats-back" id="stats-back-btn" onclick="statsGoBack()" style="display:none">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+        </div>
+        <div class="stats-title-wrap">
+          <div class="stats-main-title" id="stats-title">Estatísticas</div>
+          <div class="stats-sub" id="stats-subtitle">MARÇO 2026</div>
+        </div>
+      </div>
+
+      <!-- GLOBAL STATS -->
+      <div id="stats-global">
+        <div class="vcontent">
+          <div class="filter-row">
+            <div class="fchip active" onclick="setFilter(this,'today')">Hoje</div>
+            <div class="fchip" onclick="setFilter(this,'week')">Semana</div>
+            <div class="fchip" onclick="setFilter(this,'month')">Mês</div>
+          </div>
+
+          <div class="completion-card">
+            <div class="rate-ring">
+              <svg viewBox="0 0 80 80" width="80" height="80">
+                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--surface2)" stroke-width="5"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#3ecf8e" stroke-width="5" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="54" transform="rotate(-90 40 40)" id="rate-arc"/>
+              </svg>
+              <div class="rate-center"><div class="rate-pct" id="rate-pct">73%</div><div class="rate-lbl">CONCLUSÃO</div></div>
+            </div>
+            <div class="rate-breakdown">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--font-m);margin-bottom:3px;letter-spacing:0.5px">AGENDAMENTOS</div>
+              <div class="rb-item"><div class="rb-dot" style="background:#3ecf8e"></div><div class="rb-lbl">Concluídas</div><div class="rb-val" id="rb-done">2 de 3</div></div>
+              <div class="rb-item"><div class="rb-dot" style="background:#f0a500"></div><div class="rb-lbl">Pendentes</div><div class="rb-val" id="rb-pend">1</div></div>
+              <div class="rb-item"><div class="rb-dot" style="background:#ff5c5c"></div><div class="rb-lbl">Não feitas</div><div class="rb-val" id="rb-miss">0</div></div>
+              <div style="margin-top:5px;font-size:10px;color:var(--text3);font-family:var(--font-m)">Inadimplência: <span style="color:#ff5c5c" id="rb-inad">8%</span></div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Tempo por Tópico</div>
+            <div id="bar-chart">
+              <div class="bar-row"><div class="bl">⚡ Prog.</div><div class="bt"><div class="bf" style="width:82%;background:#f0a500"></div></div><div class="bv">3h12m</div></div>
+              <div class="bar-row"><div class="bl">🏋️ Acad.</div><div class="bt"><div class="bf" style="width:36%;background:#3ecf8e"></div></div><div class="bv">1h10m</div></div>
+              <div class="bar-row"><div class="bl">📚 Est.</div><div class="bt"><div class="bf" style="width:24%;background:#5b8cff"></div></div><div class="bv">55m</div></div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">Horários de Início</div>
+            <div class="heatmap" id="heatmap"></div>
+            <div class="hour-labels"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>
+          </div>
+
+          <!-- Lista de tópicos para drill-down -->
+          <div class="px" style="padding-bottom:7px"><div class="section-lbl">Ver por Tópico</div></div>
+          <div class="topic-stat-chip" onclick="openTopicStats('Programação','⚡','#f0a500')">
+            <div class="tsc-icon" style="background:rgba(240,165,0,0.12);color:#f0a500">⚡</div>
+            <div class="tsc-info"><div class="tsc-name">Programação</div><div class="tsc-sub">4 subtópicos</div></div>
+            <div class="tsc-time">82h 30m</div>
+            <svg width="12" height="12" fill="none" stroke="var(--text3)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+          <div class="topic-stat-chip" onclick="openTopicStats('Estudos','📚','#5b8cff')">
+            <div class="tsc-icon" style="background:rgba(91,140,255,0.12);color:#5b8cff">📚</div>
+            <div class="tsc-info"><div class="tsc-name">Estudos</div><div class="tsc-sub">3 subtópicos</div></div>
+            <div class="tsc-time">55h 20m</div>
+            <svg width="12" height="12" fill="none" stroke="var(--text3)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+          <div class="topic-stat-chip" onclick="openTopicStats('Academia','🏋️','#3ecf8e')">
+            <div class="tsc-icon" style="background:rgba(62,207,142,0.12);color:#3ecf8e">🏋️</div>
+            <div class="tsc-info"><div class="tsc-name">Academia</div><div class="tsc-sub">5 subtópicos</div></div>
+            <div class="tsc-time">38h 00m</div>
+            <svg width="12" height="12" fill="none" stroke="var(--text3)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+          <div style="height:8px"></div>
+        </div>
+      </div>
+
+      <!-- TOPIC DETAIL (sub-view) -->
+      <div id="stats-topic" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column;">
+        <div class="vcontent">
+          <div class="filter-row">
+            <div class="fchip active">Hoje</div>
+            <div class="fchip">Semana</div>
+            <div class="fchip">Mês</div>
+            <div class="fchip">Total</div>
+          </div>
+          <!-- Summary card -->
+          <div class="chart-card" id="topic-summary-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <div id="topic-detail-icon" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;"></div>
+              <div>
+                <div id="topic-detail-name" style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text)"></div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--font-m);margin-top:2px" id="topic-detail-meta"></div>
+              </div>
+              <div style="margin-left:auto;text-align:right">
+                <div id="topic-detail-total" style="font-family:var(--font-m);font-size:18px;color:var(--text)"></div>
+                <div style="font-size:9px;color:var(--text3);font-family:var(--font-m)">total acum.</div>
+              </div>
+            </div>
+            <!-- subtopic bars -->
+            <div id="topic-subtopic-bars"></div>
+          </div>
+
+          <!-- subtopic details -->
+          <div class="chart-card" id="topic-subtopic-detail">
+            <div class="chart-title">Distribuição por Subtópico</div>
+            <div id="topic-subtopic-list"></div>
+          </div>
+
+          <!-- heatmap para o tópico -->
+          <div class="chart-card">
+            <div class="chart-title">Horários mais frequentes</div>
+            <div class="heatmap" id="heatmap-topic"></div>
+            <div class="hour-labels"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="navigate('home')"><div class="nav-icon">⊞</div><div class="nav-label">INÍCIO</div></div>
+        <div class="nav-item active" onclick="navigate('stats')"><div class="nav-icon">📊</div><div class="nav-label">STATS</div></div>
+        <div class="nav-item" onclick="navigate('tasks')"><div class="nav-icon">☑</div><div class="nav-label">TAREFAS</div></div>
+        <div class="nav-item" onclick="navigate('settings')"><div class="nav-icon">⚙</div><div class="nav-label">CONFIG</div></div>
+      </div>
+    </div>
+
+    <!-- ========== TASKS ========== -->
+    <div class="view" id="view-tasks">
+      <div class="navbar" style="flex-shrink:0">
+        <div><div class="nb-title">Tarefas</div><div class="nb-sub">25 MAR 2026</div></div>
+      </div>
+      <div class="task-type-tabs">
+        <div class="tt-tab active" onclick="switchTab(this,'pending')">Pendentes</div>
+        <div class="tt-tab" onclick="switchTab(this,'done')">Concluídas</div>
+        <div class="tt-tab" onclick="switchTab(this,'perm')">Permanentes</div>
+      </div>
+      <div class="vcontent" style="padding-bottom:90px">
+
+        <!-- PENDING -->
+        <div id="tab-pending">
+          <!-- Aviso de conflito contextual -->
+          <div style="padding:0 18px 10px">
+            <div style="background:var(--accent2-dim);border:1px solid rgba(91,140,255,0.2);border-radius:10px;padding:9px 12px;font-size:11px;color:var(--accent2);font-family:var(--font-m)">
+              ⏰ Próximo: <b>14:00 — Matemática</b> · janela livre: <b style="color:var(--text2)">4h 14m</b>
+            </div>
+          </div>
+          <div class="task-section">
+            <div class="section-lbl">Hoje — Pendentes</div>
+            <div id="pending-list">
+              <div class="task-item" onclick="toggleTask(this)">
+                <div class="t-check"></div>
+                <div class="t-info"><div class="t-name">Implementar modal de subtópico</div><div class="t-meta">⚡ Programação › React Native</div></div>
+                <div class="t-badge improvised">improviso</div>
+              </div>
+              <div class="task-item" onclick="toggleTask(this)">
+                <div class="t-check"></div>
+                <div class="t-info"><div class="t-name">Revisar cap. 4 — Kotlin coroutines</div><div class="t-meta">📚 Estudos › Kotlin · 14:00</div></div>
+                <div class="t-badge scheduled">agendada</div>
+              </div>
+              <div class="task-item" onclick="toggleTask(this)">
+                <div class="t-check"></div>
+                <div class="t-info"><div class="t-name">Treino de costas</div><div class="t-meta">🏋️ Academia › Costas</div></div>
+                <div class="t-badge scheduled">agendada</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DONE -->
+        <div id="tab-done" style="display:none">
+          <div class="month-header"><div class="month-lbl">MARÇO 2026</div><div class="month-line"></div></div>
+          <div class="day-header">25 – Quarta</div>
+          <div class="task-section">
+            <div class="task-item">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name done">Configurar Room Database</div><div class="t-meta">⚡ Programação › React Native · 08:40</div></div>
+              <div class="t-badge improvised">improviso</div>
+            </div>
+            <div class="task-item">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name done">Treino de perna</div><div class="t-meta">🏋️ Academia › Perna · 06:00</div></div>
+              <div class="t-badge scheduled">agendada</div>
+            </div>
+          </div>
+          <div class="day-header">24 – Terça</div>
+          <div class="task-section">
+            <div class="task-item">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name done">Exercícios de álgebra</div><div class="t-meta">📚 Estudos › Matemática · 14:00</div></div>
+              <div class="t-badge scheduled">agendada</div>
+            </div>
+          </div>
+          <div class="month-header" style="margin-top:6px"><div class="month-lbl">FEVEREIRO 2026</div><div class="month-line"></div></div>
+          <div class="day-header">28 – Sábado</div>
+          <div class="task-section">
+            <div class="task-item">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name done">Revisão de fevereiro</div><div class="t-meta">⚡ Programação · 20:00</div></div>
+              <div class="t-badge improvised">improviso</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PERM -->
+        <div id="tab-perm" style="display:none">
+          <div class="perm-type-header">
+            <div class="pth-dot" style="background:var(--green)"></div>
+            <div class="pth-lbl">Hábitos diários</div>
+          </div>
+          <div class="task-section">
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name">Leitura 20min</div><div class="t-meta">📚 Estudos · todo dia</div></div>
+              <div class="t-badge permanent">diário</div>
+            </div>
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="t-check"></div>
+              <div class="t-info"><div class="t-name">Revisão de flashcards</div><div class="t-meta">📚 Estudos · todo dia</div></div>
+              <div class="t-badge permanent">diário</div>
+            </div>
+          </div>
+          <div class="perm-type-header" style="margin-top:6px">
+            <div class="pth-dot" style="background:var(--purple)"></div>
+            <div class="pth-lbl">Recorrentes semanais</div>
+          </div>
+          <div class="task-section">
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="t-check checked"><svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+              <div class="t-info"><div class="t-name">Treino de perna</div><div class="t-meta">🏋️ Academia › Perna · seg / qua</div></div>
+              <div class="t-badge weekly">semanal</div>
+            </div>
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="t-check"></div>
+              <div class="t-info"><div class="t-name">Revisão semanal</div><div class="t-meta">⚡ Programação · domingo</div></div>
+              <div class="t-badge weekly">semanal</div>
+            </div>
+          </div>
+          <div class="perm-type-header" style="margin-top:6px">
+            <div class="pth-dot" style="background:var(--text3)"></div>
+            <div class="pth-lbl">Indefinidas</div>
+          </div>
+          <div class="task-section">
+            <div class="task-item" onclick="toggleTask(this)">
+              <div class="t-check"></div>
+              <div class="t-info"><div class="t-name">Montar biblioteca de snippets</div><div class="t-meta">⚡ Programação › Algoritmos</div></div>
+              <div class="t-badge indefinite">indefinida</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB criar tarefa -->
+      <button class="fab" onclick="openTaskCreate()">
+        <svg width="18" height="18" fill="none" stroke="#000" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="navigate('home')"><div class="nav-icon">⊞</div><div class="nav-label">INÍCIO</div></div>
+        <div class="nav-item" onclick="navigate('stats')"><div class="nav-icon">📊</div><div class="nav-label">STATS</div></div>
+        <div class="nav-item active" onclick="navigate('tasks')"><div class="nav-icon">☑</div><div class="nav-label">TAREFAS</div></div>
+        <div class="nav-item" onclick="navigate('settings')"><div class="nav-icon">⚙</div><div class="nav-label">CONFIG</div></div>
+      </div>
+    </div>
+
+    <!-- ========== SETTINGS ========== -->
+    <div class="view" id="view-settings">
+      <div class="navbar" style="flex-shrink:0">
+        <div class="icon-btn" onclick="navigate('home')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg></div>
+        <div style="flex:1;padding-left:10px"><div class="nb-title" style="font-size:18px">Configurações</div></div>
+      </div>
+      <div class="vcontent">
+        <div class="global-stat">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--font-m);letter-spacing:1px;margin-bottom:9px">DESDE A CRIAÇÃO DA CONTA</div>
+          <div class="gs-row">
+            <div class="gs-item"><div class="gs-val">84</div><div class="gs-lbl">DIAS</div></div>
+            <div class="gs-item"><div class="gs-val">176h</div><div class="gs-lbl">TOTAL</div></div>
+            <div class="gs-item"><div class="gs-val">312</div><div class="gs-lbl">SESSÕES</div></div>
+            <div class="gs-item"><div class="gs-val">68%</div><div class="gs-lbl">TAXA</div></div>
+          </div>
+        </div>
+        <div style="height:14px"></div>
+        <div class="px"><div class="section-lbl">Perfil</div></div>
+        <div class="settings-card">
+          <div class="setting-row" onclick="showToast('Editar perfil')">
+            <div class="sr-icon" style="background:var(--surface2)">👤</div>
+            <div class="sr-info"><div class="sr-name" id="settings-name-display">Gustavo</div><div class="sr-sub">Toque para editar nome e dados</div></div>
+            <svg width="13" height="13" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+          <div class="setting-row" onclick="showToast('Meta atualizada')">
+            <div class="sr-icon" style="background:var(--accent-dim)">🎯</div>
+            <div class="sr-info"><div class="sr-name">Meta diária</div><div class="sr-sub">4 horas por dia</div></div>
+            <svg width="13" height="13" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+        </div>
+        <div class="px" style="margin-top:10px"><div class="section-lbl">Aparência</div></div>
+        <div class="settings-card">
+          <div class="setting-row" onclick="toggleTheme()">
+            <div class="sr-icon" style="background:var(--surface2)" id="theme-icon">🌙</div>
+            <div class="sr-info"><div class="sr-name">Tema Escuro</div><div class="sr-sub">Alterna entre claro e escuro</div></div>
+            <div class="toggle on" id="theme-toggle" onclick="event.stopPropagation();toggleTheme()"></div>
+          </div>
+        </div>
+        <div class="px" style="margin-top:10px"><div class="section-lbl">Notificações</div></div>
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="sr-icon" style="background:rgba(91,140,255,0.12)">🔔</div>
+            <div class="sr-info"><div class="sr-name">Alertas de agendamento</div><div class="sr-sub">15 min antes do horário</div></div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-icon" style="background:rgba(62,207,142,0.12)">✅</div>
+            <div class="sr-info"><div class="sr-name">Notificação de conclusão</div><div class="sr-sub">Ao atingir fim do agendamento</div></div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-icon" style="background:rgba(255,92,92,0.1)">🚫</div>
+            <div class="sr-info"><div class="sr-name">Bloqueio de conflito</div><div class="sr-sub">Impede improviso sobre agendado</div></div>
+            <div class="toggle on"></div>
+          </div>
+        </div>
+        <div class="px" style="margin-top:10px"><div class="section-lbl">Dados</div></div>
+        <div class="settings-card">
+          <div class="setting-row" onclick="showToast('Exportando CSV...')">
+            <div class="sr-icon" style="background:var(--surface2)">📤</div>
+            <div class="sr-info"><div class="sr-name">Exportar dados</div><div class="sr-sub">CSV · JSON</div></div>
+            <svg width="13" height="13" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+          <div class="setting-row" onclick="showToast('Backup criado!')">
+            <div class="sr-icon" style="background:var(--surface2)">💾</div>
+            <div class="sr-info"><div class="sr-name">Backup local</div><div class="sr-sub">Último: nunca</div></div>
+            <svg width="13" height="13" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="navigate('home')"><div class="nav-icon">⊞</div><div class="nav-label">INÍCIO</div></div>
+        <div class="nav-item" onclick="navigate('stats')"><div class="nav-icon">📊</div><div class="nav-label">STATS</div></div>
+        <div class="nav-item" onclick="navigate('tasks')"><div class="nav-icon">☑</div><div class="nav-label">TAREFAS</div></div>
+        <div class="nav-item active"><div class="nav-icon">⚙</div><div class="nav-label">CONFIG</div></div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL: CRIAR TAREFA (com vínculo obrigatório) ========== -->
+    <div class="modal-overlay" id="modal-task-create" onclick="closeModalById('modal-task-create',event)">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Nova Tarefa</div>
+        <div class="modal-sub">A tarefa deve estar vinculada a um tópico</div>
+        <div class="modal-body">
+          <div class="modal-field">
+            <div class="modal-label">DESCRIÇÃO</div>
+            <input class="modal-input" placeholder="O que você vai fazer?" id="task-desc"/>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">TÓPICO MESTRE</div>
+            <div class="topic-sel-row" id="topic-sel">
+              <div class="sel-chip" onclick="selectTopic(this,'⚡ Programação')">⚡ Programação</div>
+              <div class="sel-chip" onclick="selectTopic(this,'📚 Estudos')">📚 Estudos</div>
+              <div class="sel-chip" onclick="selectTopic(this,'🏋️ Academia')">🏋️ Academia</div>
+            </div>
+          </div>
+          <div class="modal-field" id="subtopic-field" style="display:none">
+            <div class="modal-label">SUBTÓPICO</div>
+            <div class="topic-sel-row" id="subtopic-sel"></div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">TIPO</div>
+            <div style="display:flex;gap:6px">
+              <div class="sel-chip selected" onclick="selectType(this,'improviso')" style="flex:1;justify-content:center">Improviso</div>
+              <div class="sel-chip" onclick="selectType(this,'agendada')" style="flex:1;justify-content:center">Agendada</div>
+              <div class="sel-chip" onclick="selectType(this,'permanente')" style="flex:1;justify-content:center">Permanente</div>
+            </div>
+          </div>
+          <div class="modal-field" id="schedule-field" style="display:none">
+            <div class="modal-label">HORÁRIO</div>
+            <div class="time-row">
+              <input class="time-input" placeholder="14:00" value="14:00"/>
+              <div class="time-sep">–</div>
+              <input class="time-input" placeholder="16:00" value="16:00"/>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeModalById('modal-task-create')">Cancelar</button>
+          <button class="modal-btn confirm" onclick="confirmTaskCreate()">Criar Tarefa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL: EDITAR/CRIAR TÓPICO ========== -->
+    <div class="modal-overlay" id="modal-topic-edit" onclick="closeModalById('modal-topic-edit',event)">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="topic-edit-title">Novo Tópico</div>
+        <div class="modal-sub">Preencha as informações básicas</div>
+        <div class="modal-body">
+          <div class="modal-field">
+            <div class="modal-label">NOME</div>
+            <input class="modal-input" placeholder="ex: Estudos, Trabalho, Saúde..." id="topic-name-input"/>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">ÍCONE</div>
+            <div class="emoji-row" id="emoji-picker">
+              <div class="emoji-opt selected" onclick="selectEmoji(this)">📚</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">⚡</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🏋️</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">💼</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🎨</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🎸</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🌱</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🏃</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">💡</div>
+              <div class="emoji-opt" onclick="selectEmoji(this)">🔬</div>
+            </div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">COR</div>
+            <div class="color-row">
+              <div class="color-opt selected" style="background:#f0a500" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#5b8cff" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#3ecf8e" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#c864ff" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#ff5c5c" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#ff9f43" onclick="selectColor(this)"></div>
+              <div class="color-opt" style="background:#00d2d3" onclick="selectColor(this)"></div>
+            </div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">SUBTÓPICOS (separe por vírgula)</div>
+            <input class="modal-input" placeholder="ex: React Native, Kotlin, Algoritmos" id="subtopics-input"/>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeModalById('modal-topic-edit')">Cancelar</button>
+          <button class="modal-btn confirm" onclick="confirmTopicEdit()">Salvar Tópico</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODAL: REAGENDAR ========== -->
+    <div class="modal-overlay" id="modal-reschedule" onclick="closeModalById('modal-reschedule',event)">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="reschedule-title">Reagendar</div>
+        <div class="modal-sub" id="reschedule-sub">Somente para hoje. Volta ao horário original amanhã.</div>
+        <div style="padding:0 18px 8px;font-size:10px;color:var(--text3);font-family:var(--font-m);letter-spacing:0.8px">HORÁRIOS DISPONÍVEIS HOJE</div>
+        <div style="margin:0 18px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:13px;overflow:hidden">
+          <div class="time-option" onclick="pickReschedule('10:30','11:30')">
+            <div class="to-time">10:30</div>
+            <div class="to-label">1h disponível</div>
+            <div class="to-badge free">Livre</div>
+          </div>
+          <div class="time-option" onclick="pickReschedule('11:00','13:00')">
+            <div class="to-time">11:00</div>
+            <div class="to-label">2h disponível</div>
+            <div class="to-badge free">Livre</div>
+          </div>
+          <div class="time-option" onclick="showToast('⚠ Conflito com improviso ativo')">
+            <div class="to-time">09:00</div>
+            <div class="to-label">Improviso em andamento</div>
+            <div class="to-badge busy">Ocupado</div>
+          </div>
+          <div class="time-option" onclick="pickReschedule('17:00','19:00')">
+            <div class="to-time">17:00</div>
+            <div class="to-label">2h disponível</div>
+            <div class="to-badge free">Livre</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeModalById('modal-reschedule')">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /phone -->
+
+<!-- PAINEL LATERAL -->
+<div style="width:272px;display:flex;flex-direction:column;gap:14px;padding-top:4px;flex-shrink:0">
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#e8e8f0;margin-bottom:2px">Personal Tracker <span style="color:#f0a500">v4</span></div>
+    <div style="font-size:11px;color:#55556a;font-family:'DM Mono',monospace">REFATORAÇÃO ESTRUTURAL</div>
+  </div>
+  <div style="background:#141418;border:1px solid #1e1e28;border-radius:13px;padding:14px">
+    <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#e8e8f0;margin-bottom:9px">O que mudou na v4</div>
+    <div style="display:flex;flex-direction:column;gap:7px;font-size:11px;color:#9090a8;line-height:1.5">
+      <div>🚀 <b style="color:#e8e8f0">Onboarding</b> — inicialização offline com nome, nascimento e meta</div>
+      <div>🏠 <b style="color:#e8e8f0">Header compacto</b> — saudação sem esticar, chips Hoje/Mês/Total</div>
+      <div>📋 <b style="color:#e8e8f0">Controles na Agenda</b> — ▶ Antecipar, ⏸ Pausar, ✓ Finalizar, ↕ Reagendar em cada item</div>
+      <div>📂 <b style="color:#e8e8f0">Tópicos → Stats</b> — clique abre sub-aba de estatísticas do tópico</div>
+      <div>📊 <b style="color:#e8e8f0">Stats drill-down</b> — "Ver por Tópico" leva para stats detalhadas com subtópicos</div>
+      <div>✅ <b style="color:#e8e8f0">Tarefas sempre vinculadas</b> — FAB abre criação com seletor obrigatório de tópico+subtópico</div>
+      <div>✎ <b style="color:#e8e8f0">Edição de tópico</b> — sheet dedicada (nome, ícone, cor, subtópicos)</div>
+      <div>↕ <b style="color:#e8e8f0">Reagendar</b> — mostra horários livres do dia, volta ao normal amanhã</div>
+    </div>
+  </div>
+  <div style="background:#141418;border:1px solid #1e1e28;border-radius:13px;padding:14px">
+    <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#e8e8f0;margin-bottom:8px">Experimente</div>
+    <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:#9090a8">
+      <div><span style="color:#f0a500">①</span> Preencha o onboarding e clique em "Começar"</div>
+      <div><span style="color:#f0a500">②</span> Pause/Finalize/Antecipe itens da Agenda</div>
+      <div><span style="color:#f0a500">③</span> Toque ↕ Reagendar em Matemática</div>
+      <div><span style="color:#f0a500">④</span> Clique num tópico → stats detalhadas</div>
+      <div><span style="color:#f0a500">⑤</span> FAB (+) em Tarefas → vínculo obrigatório</div>
+      <div><span style="color:#f0a500">⑥</span> "Novo Tópico" → sheet de criação</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let isDark = true;
+let userName = 'Gustavo';
+let agendaState = 'active'; // active | paused | idle
+
+// ---- ONBOARDING ----
+function nextOnb(step) {
+  document.querySelectorAll('.onb-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('onb-step-'+step).classList.add('active');
+  if(step === 3) {
+    const n = document.getElementById('onb-name').value.trim() || 'Gustavo';
+    const b = document.getElementById('onb-birth').value;
+    const g = document.getElementById('onb-goal').value || '4';
+    document.getElementById('onb-ready-title').textContent = 'Pronto, '+(n||'amigo')+'!';
+    document.getElementById('onb-confirm-name').textContent = n;
+    document.getElementById('onb-confirm-birth').textContent = b ? new Date(b+'T12:00').toLocaleDateString('pt-BR') : '—';
+    document.getElementById('onb-confirm-goal').textContent = g+'h';
+  }
+}
+function finishOnboarding() {
+  const n = document.getElementById('onb-name').value.trim() || 'Gustavo';
+  userName = n;
+  document.getElementById('home-greeting-name').textContent = 'Olá, '+n+' 👋';
+  document.getElementById('settings-name-display').textContent = n;
+  navigate('home');
+}
+
+// ---- NAVIGATION ----
+function navigate(v) {
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  // reset stats sub-view
+  if(v==='stats') resetStatsToGlobal();
+}
+
+// ---- AGENDA CONTROLS ----
+function pauseAgenda() {
+  document.getElementById('ag-active').style.display='none';
+  document.getElementById('ag-paused').style.display='block';
+  agendaState='paused';
+  showToast('⏸ Sessão pausada — tempo de pausa não contabilizado');
+}
+function resumeAgenda() {
+  document.getElementById('ag-paused').style.display='none';
+  document.getElementById('ag-active').style.display='block';
+  agendaState='active';
+  showToast('▶ Sessão retomada');
+}
+function finishAgenda() {
+  const card = document.getElementById('ag-active');
+  card.className='agenda-card done-state';
+  card.querySelector('.ag-sub').textContent='Improviso · 09:14 → 10:02';
+  card.querySelector('.ag-controls').innerHTML='<div class="ag-status-done"><div class="ag-done-check"><svg width="9" height="9" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div><div class="ag-done-txt">Concluída</div><div class="ag-done-dur">47m 22s</div></div>';
+  agendaState='idle';
+  showToast('✓ Sessão finalizada e salva!');
+}
+function cancelAgenda() {
+  document.getElementById('ag-paused').style.display='none';
+  agendaState='idle';
+  showToast('✕ Sessão cancelada');
+}
+
+// ---- TOPIC STATS DRILL DOWN ----
+const topicData = {
+  'Programação': {
+    icon:'⚡', color:'#f0a500', bg:'rgba(240,165,0,0.12)', total:'82h 30m', meta:'4 subtópicos · desde 12 Jan',
+    subs:[{name:'React Native',time:'28h 10m',pct:0.34},{name:'Kotlin / Compose',time:'22h 05m',pct:0.27},{name:'Algoritmos',time:'18h 40m',pct:0.22},{name:'Git / DevOps',time:'13h 35m',pct:0.17}]
+  },
+  'Estudos': {
+    icon:'📚', color:'#5b8cff', bg:'rgba(91,140,255,0.12)', total:'55h 20m', meta:'3 subtópicos · desde 10 Jan',
+    subs:[{name:'Matemática',time:'22h 00m',pct:0.40},{name:'Português',time:'18h 10m',pct:0.33},{name:'Física',time:'15h 10m',pct:0.27}]
+  },
+  'Academia': {
+    icon:'🏋️', color:'#3ecf8e', bg:'rgba(62,207,142,0.12)', total:'38h 00m', meta:'5 subtópicos · desde 10 Jan',
+    subs:[{name:'Perna',time:'10h 00m',pct:0.26},{name:'Peito/Tríceps',time:'8h 30m',pct:0.22},{name:'Costas/Bíceps',time:'8h 00m',pct:0.21},{name:'Ombro',time:'6h 00m',pct:0.16},{name:'Cardio',time:'5h 30m',pct:0.15}]
+  }
+};
+
+function openTopicStats(name, icon, color) {
+  navigate('stats');
+  setTimeout(()=>{
+    const d = topicData[name];
+    if(!d) return;
+    document.getElementById('stats-global').style.display='none';
+    const td = document.getElementById('stats-topic');
+    td.style.display='flex';
+    td.style.flexDirection='column';
+    document.getElementById('stats-back-btn').style.display='flex';
+    document.getElementById('stats-title').textContent = name;
+    document.getElementById('stats-subtitle').textContent = d.meta;
+
+    // fill detail
+    const iconEl = document.getElementById('topic-detail-icon');
+    iconEl.textContent = d.icon;
+    iconEl.style.background = d.bg;
+    iconEl.style.color = d.color;
+    document.getElementById('topic-detail-name').textContent = name;
+    document.getElementById('topic-detail-meta').textContent = d.meta;
+    document.getElementById('topic-detail-total').textContent = d.total;
+    document.getElementById('topic-detail-total').style.color = d.color;
+
+    // bars
+    document.getElementById('topic-subtopic-bars').innerHTML = d.subs.map(s=>`
+      <div class="bar-row"><div class="bl">${s.name}</div><div class="bt"><div class="bf" style="width:${Math.round(s.pct*100)}%;background:${d.color}"></div></div><div class="bv">${s.time}</div></div>
+    `).join('');
+
+    // subtopic detail list
+    document.getElementById('topic-subtopic-list').innerHTML = d.subs.map(s=>`
+      <div class="subtopic-stat">
+        <div class="ss-dot" style="background:${d.color}"></div>
+        <div class="ss-name">${s.name}</div>
+        <div class="ss-bar-wrap"><div class="ss-bar" style="width:${Math.round(s.pct*100)}%;background:${d.color}"></div></div>
+        <div class="ss-time">${s.time}</div>
+      </div>
+    `).join('');
+
+    // heatmap for topic
+    const hmt = document.getElementById('heatmap-topic');
+    if(hmt && !hmt.children.length) {
+      const act=[0,0,0,0,0,1,2,1,0,2,3,3,1,0,0,1,1,2,1,0,0,0,0,0];
+      const cols=['var(--surface2)','rgba(240,165,0,0.2)','rgba(240,165,0,0.5)','rgba(240,165,0,0.85)'];
+      act.forEach(v=>{const c=document.createElement('div');c.className='heat-cell';c.style.background=cols[v];hmt.appendChild(c);});
+    }
+  }, 50);
+}
+
+function resetStatsToGlobal() {
+  document.getElementById('stats-global').style.display='block';
+  const td = document.getElementById('stats-topic');
+  td.style.display='none';
+  document.getElementById('stats-back-btn').style.display='none';
+  document.getElementById('stats-title').textContent='Estatísticas';
+  document.getElementById('stats-subtitle').textContent='MARÇO 2026';
+}
+function statsGoBack() { resetStatsToGlobal(); }
+
+// ---- FOLDER TOPICS ----
+function toggleFolder(el) {
+  const row=el.closest('.folder-card').querySelector('.subtopics-row');
+  const btn=el.querySelector('.expand-btn');
+  row.classList.toggle('open');
+  btn.style.transform=row.classList.contains('open')?'rotate(180deg)':'';
+}
+
+// ---- TASKS ----
+function switchTab(el,tab) {
+  document.querySelectorAll('.tt-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['pending','done','perm'].forEach(id=>{
+    document.getElementById('tab-'+id).style.display=id===tab?'block':'none';
+  });
+}
+function toggleTask(el) {
+  const c=el.querySelector('.t-check');
+  const n=el.querySelector('.t-name');
+  const checked=c.classList.toggle('checked');
+  n.classList.toggle('done',checked);
+  c.innerHTML=checked?'<svg width="9" height="9" fill="none" stroke="#000" stroke-width="3" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>':'';
+}
+
+// ---- TASK CREATE MODAL ----
+const subtopicsMap = {
+  '⚡ Programação':['React Native','Kotlin / Compose','Algoritmos','Git / DevOps'],
+  '📚 Estudos':['Matemática','Português','Física'],
+  '🏋️ Academia':['Perna','Peito / Tríceps','Costas / Bíceps','Ombro','Cardio']
+};
+function openTaskCreate() {
+  document.getElementById('modal-task-create').classList.add('open');
+}
+function selectTopic(el,topic) {
+  document.querySelectorAll('#topic-sel .sel-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const subs=subtopicsMap[topic]||[];
+  const sf=document.getElementById('subtopic-field');
+  const ss=document.getElementById('subtopic-sel');
+  sf.style.display='flex';
+  ss.innerHTML=subs.map(s=>`<div class="sel-chip" onclick="selectSub(this)">${s}</div>`).join('');
+}
+function selectSub(el){
+  document.querySelectorAll('#subtopic-sel .sel-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectType(el,type){
+  el.closest('.modal-field').querySelectorAll('.sel-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('schedule-field').style.display=type==='agendada'?'flex':'none';
+}
+function confirmTaskCreate(){
+  const desc=document.getElementById('task-desc').value.trim();
+  if(!desc){showToast('⚠ Informe a descrição');return;}
+  const selTopic=document.querySelector('#topic-sel .sel-chip.selected');
+  if(!selTopic){showToast('⚠ Selecione um tópico');return;}
+  const selSub=document.querySelector('#subtopic-sel .sel-chip.selected');
+  closeModalById('modal-task-create');
+  const list=document.getElementById('pending-list');
+  const meta=(selTopic?selTopic.textContent:'')+(selSub?' › '+selSub.textContent:'');
+  const item=document.createElement('div');
+  item.className='task-item';item.onclick=function(){toggleTask(this)};
+  item.innerHTML=`<div class="t-check"></div><div class="t-info"><div class="t-name">${desc}</div><div class="t-meta">${meta}</div></div><div class="t-badge improvised">improviso</div>`;
+  list.appendChild(item);
+  showToast('✓ Tarefa criada e vinculada!');
+}
+
+// ---- TOPIC EDIT ----
+function openTopicEdit(){
+  document.getElementById('modal-topic-edit').classList.add('open');
+  document.getElementById('topic-edit-title').textContent='Novo Tópico';
+}
+function selectEmoji(el){document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');}
+function selectColor(el){document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');}
+function confirmTopicEdit(){
+  const n=document.getElementById('topic-name-input').value.trim();
+  if(!n){showToast('⚠ Informe o nome do tópico');return;}
+  closeModalById('modal-topic-edit');
+  showToast('✓ Tópico "'+n+'" criado!');
+}
+
+// ---- RESCHEDULE ----
+function openReschedule(name, time){
+  document.getElementById('reschedule-title').textContent='Reagendar '+name;
+  document.getElementById('modal-reschedule').classList.add('open');
+}
+function pickReschedule(start,end){
+  closeModalById('modal-reschedule');
+  showToast('↕ Reagendado para '+start+' – '+end+' (só hoje)');
+}
+
+// ---- STATS filters ----
+function setFilter(el,f){
+  el.closest('.filter-row').querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const data={
+    today:{bars:[['⚡ Prog.','82%','3h12m','#f0a500'],['🏋️ Acad.','36%','1h10m','#3ecf8e'],['📚 Est.','24%','55m','#5b8cff']],pct:73,done:'2 de 3',pend:'1',miss:'0',inad:'8%',offset:54},
+    week: {bars:[['⚡ Prog.','78%','18h30m','#f0a500'],['📚 Est.','52%','9h45m','#5b8cff'],['🏋️ Acad.','30%','5h00m','#3ecf8e']],pct:81,done:'13 de 16',pend:'2',miss:'1',inad:'6%',offset:38},
+    month:{bars:[['⚡ Prog.','85%','42h00m','#f0a500'],['📚 Est.','52%','22h15m','#5b8cff'],['🏋️ Acad.','38%','15h00m','#3ecf8e']],pct:68,done:'54 de 79',pend:'8',miss:'17',inad:'22%',offset:64},
+  };
+  const d=data[f];
+  document.getElementById('bar-chart').innerHTML=d.bars.map(b=>`<div class="bar-row"><div class="bl">${b[0]}</div><div class="bt"><div class="bf" style="width:${b[1]};background:${b[3]}"></div></div><div class="bv">${b[2]}</div></div>`).join('');
+  document.getElementById('rate-pct').textContent=d.pct+'%';
+  document.getElementById('rb-done').textContent=d.done;
+  document.getElementById('rb-pend').textContent=d.pend;
+  document.getElementById('rb-miss').textContent=d.miss;
+  document.getElementById('rb-inad').textContent=d.inad;
+  const arc=document.getElementById('rate-arc');
+  if(arc)arc.style.strokeDashoffset=d.offset;
+}
+
+// ---- THEME ----
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.body.style.background=isDark?'#080810':'#d0d0de';
+  const t=document.getElementById('theme-toggle');
+  const i=document.getElementById('theme-icon');
+  if(t){isDark?t.classList.add('on'):t.classList.remove('on');}
+  if(i)i.textContent=isDark?'🌙':'☀️';
+  showToast(isDark?'Tema escuro':'Tema claro');
+}
+
+// ---- MODAL GENERIC CLOSE ----
+function closeModalById(id,e){
+  if(e && e.target!==document.getElementById(id)) return;
+  document.getElementById(id).classList.remove('open');
+}
+
+// ---- HEATMAP ----
+(function(){
+  const hm=document.getElementById('heatmap');
+  if(!hm)return;
+  const act=[0,0,0,0,0,1,3,2,0,3,4,4,2,1,0,1,2,3,2,1,0,0,0,0];
+  const cols=['var(--surface2)','rgba(240,165,0,0.2)','rgba(240,165,0,0.4)','rgba(240,165,0,0.65)','rgba(240,165,0,0.9)'];
+  act.forEach(v=>{const c=document.createElement('div');c.className='heat-cell';c.style.background=cols[v];hm.appendChild(c);});
+})();
+
+// ---- LIVE TIMER ----
+let secs=47*60+22;
+let pausedSecs=0;
+setInterval(()=>{
+  if(agendaState==='active'){
+    secs++;
+    const h=Math.floor(secs/3600).toString().padStart(2,'0');
+    const m=Math.floor((secs%3600)/60).toString().padStart(2,'0');
+    const s=(secs%60).toString().padStart(2,'0');
+    const str=`${h}:${m}:${s}`;
+    const lt=document.getElementById('ag-live-timer');
+    if(lt)lt.textContent=str;
+  }
+},1000);
+
+// ---- TOAST ----
+function showToast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.style.opacity='1';
+  clearTimeout(window._t);window._t=setTimeout(()=>t.style.opacity='0',2400);
+}
+</script>
+</body>
+</html>
